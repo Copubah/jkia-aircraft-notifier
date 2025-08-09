@@ -73,7 +73,7 @@ This serverless application monitors aircraft activity around JKIA and sends ins
 
 ### 1. Clone Repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Copubah/jkia-aircraft-notifier
 cd jkia-aircraft-notifier
 ```
 
@@ -83,7 +83,7 @@ Edit `variables.tf` to set your notification email:
 variable "notification_email" {
   description = "Email address to receive aircraft landing alerts"
   type        = string
-  default     = "your-email@example.com"  # Change this
+  default     = "copubah@gmail.com"  # 
 }
 ```
 
