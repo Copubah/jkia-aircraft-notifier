@@ -13,8 +13,8 @@ provider "aws" {
 }
 
 module "infra" {
-  source              = "./terraform"
-  notification_email  = var.notification_email
+  source             = "./terraform"
+  notification_email = var.notification_email
   aws_region         = var.aws_region
 }
 
