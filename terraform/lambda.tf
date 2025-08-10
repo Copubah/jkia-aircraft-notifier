@@ -18,13 +18,11 @@ resource "aws_lambda_function" "landing_notifier" {
   environment {
     variables = {
       SNS_TOPIC_ARN = aws_sns_topic.aircraft_landing.arn
-      DYNAMODB_TABLE = aws_dynamodb_table.jkia_arrivals.name
     }
   }
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_basic,
-    aws_iam_role_policy_attachment.lambda_sns,
-    aws_iam_role_policy_attachment.lambda_dynamodb
+    aws_iam_role_policy_attachment.lambda_sns
   ]
 }
