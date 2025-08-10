@@ -11,4 +11,13 @@ output "lambda_function_name" {
 output "eventbridge_rule_name" {
   description = "Name of the EventBridge rule"
   value       = aws_cloudwatch_event_rule.landing_check.name
+}output "
+dynamodb_table_name" {
+  description = "Name of the DynamoDB table storing arrivals"
+  value       = aws_dynamodb_table.jkia_arrivals.name
+}
+
+output "dynamodb_table_arn" {
+  description = "ARN of the DynamoDB table storing arrivals"
+  value       = aws_dynamodb_table.jkia_arrivals.arn
 }

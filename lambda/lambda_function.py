@@ -3,9 +3,56 @@ import json
 import requests
 import boto3
 from datetime import datetime, timezone
+from decimal import Decimal
 
 SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
+DYNAMODB_TABLE = os.environ.get('DYNAMODB_TABLE', 'jkia-arrivals')
 sns = boto3.client('sns')
+dynamodb = boto3.resource('dynamodb')
+
+def store_arrival(aircraft_data):
+    """Store aircraft arrival in DynamoDB"""
+    try:
+        table = dynamodb.Table(DYNAMODB_TABLE)
+        now = datetime.now(timezone.utc)
+        
+        item = {
+            'date': now.strftime('%Y-%m-%d'),
+            'timestamp': now.isoformat(),
+            'callsign': aircraft_data.get('callsign', 'Unknown'),
+            'altitude': Decimal(str(aircraft_data.get('altitude', 0))) if aircraft_data.get('altitude') else Decimal('0'),
+            'on_ground': aircraft_data.get('on_ground', False),
+            'velocity': Decimal(str(aircraft_data.get('velocity', 0))) if aircraft_data.get('velocity') else Decimal('0'),
+            'detection_time': now.strftime('%H:%M:%S UTC')
+        }
+        
+        # Use composite key to avoid duplicates (date + callsign + hour)
+        item['arrival_id'] = f"{item['date']}#{aircraft_data.get('callsign', 'Unknown')}#{now.strftime('%H')}"
+        
+        table.put_item(Item=item)
+        print(f"Stored arrival for {aircraft_data.get('callsign')} in DynamoDB")
+        return True
+    except Exception as e:
+        print(f"Error storing arrival in DynamoDB: {e}")
+        return False
+
+def get_todays_arrivals():
+    """Get all arrivals for today from DynamoDB"""
+    try:
+        table = dynamodb.Table(DYNAMODB_TABLE)
+        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        
+        response = table.query(
+            IndexName='date-timestamp-index',
+            KeyConditionExpression='#date = :date',
+            ExpressionAttributeNames={'#date': 'date'},
+            ExpressionAttributeValues={':date': today}
+        )
+        
+        return response.get('Items', [])
+    except Exception as e:
+        print(f"Error querying today's arrivals: {e}")
+        return []
 
 def lambda_handler(event, context):
     print(f"Starting JKIA landing check at {datetime.now(timezone.utc)}")
@@ -78,6 +125,29 @@ def lambda_handler(event, context):
             "body": json.dumps({"status": "error", "message": error_msg})
         }
 
+    # If this is a query request, return today's arrivals
+    if event.get('query_type') == 'todays_arrivals':
+        todays_arrivals = get_todays_arrivals()
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "status": "success",
+                "query_type": "todays_arrivals",
+                "date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                "total_arrivals": len(todays_arrivals),
+                "arrivals": [
+                    {
+                        "callsign": item.get('callsign'),
+                        "time": item.get('detection_time'),
+                        "altitude": float(item.get('altitude', 0)),
+                        "on_ground": item.get('on_ground'),
+                        "velocity": float(item.get('velocity', 0))
+                    } for item in todays_arrivals
+                ],
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }, default=str)
+        }
+
     notifications_sent = 0
     for aircraft in landed_aircraft:
         try:
@@ -85,6 +155,9 @@ def lambda_handler(event, context):
             altitude = aircraft.get("altitude")
             on_ground = aircraft.get("on_ground")
             velocity = aircraft.get("velocity")
+            
+            # Store the arrival in DynamoDB
+            store_arrival(aircraft)
             
             # Create detailed message
             status = "on ground" if on_ground else f"at {altitude}m altitude"
