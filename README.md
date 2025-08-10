@@ -1,14 +1,14 @@
-# JKIA Aircraft Landing Notifier ✈️
+# JKIA Aircraft Landing Notifier 
 
 Real-time aircraft landing notifications for Nairobi's Jomo Kenyatta International Airport (JKIA) using AWS serverless architecture and the OpenSky Network API.
 
 ![Architecture Diagram](./docs/architecture.png)
 
-## 🎯 Overview
+##  Overview
 
 This serverless application monitors aircraft activity around JKIA and sends instant email notifications when aircraft land or are detected in the landing pattern. Built entirely on AWS using Infrastructure as Code (Terraform) for reliable, scalable, and cost-effective monitoring.
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐    ┌─────────────┐
@@ -31,7 +31,7 @@ This serverless application monitors aircraft activity around JKIA and sends ins
 - **Amazon SNS**: Delivers email notifications
 - **CloudWatch Logs**: Monitors function execution and debugging
 
-## 🚀 Features
+##  Features
 
 - ✅ **Real-time Monitoring**: Checks aircraft positions every 5 minutes
 - ✅ **Smart Detection**: Identifies aircraft landing based on altitude and ground status
@@ -41,7 +41,7 @@ This serverless application monitors aircraft activity around JKIA and sends ins
 - ✅ **Infrastructure as Code**: Fully automated deployment with Terraform
 - ✅ **Comprehensive Logging**: Full observability and debugging capabilities
 
-## 📋 Prerequisites
+##  Prerequisites
 
 - **AWS Account** with appropriate permissions
 - **AWS CLI** configured with credentials
@@ -69,17 +69,16 @@ This serverless application monitors aircraft activity around JKIA and sends ins
 }
 ```
 
-## 🛠️ Installation
+##  Installation
 
 ### 1. Clone Repository
-```bash
 git clone https://github.com/Copubah/jkia-aircraft-notifier
 cd jkia-aircraft-notifier
-```
+
 
 ### 2. Configure Email
 Edit `variables.tf` to set your notification email:
-```hcl
+
 variable "notification_email" {
   description = "Email address to receive aircraft landing alerts"
   type        = string
@@ -88,7 +87,6 @@ variable "notification_email" {
 ```
 
 ### 3. Deploy Infrastructure
-```bash
 # Make deployment script executable
 chmod +x deploy.sh
 
@@ -100,10 +98,9 @@ chmod +x deploy.sh
 - Check your email inbox for AWS SNS confirmation
 - Click the confirmation link to activate notifications
 
-## 📊 Monitoring & Testing
+##  Monitoring & Testing
 
 ### View Real-time Logs
-```bash
 # Follow logs in real-time
 aws logs tail /aws/lambda/jkia-landing-notifier --follow
 
@@ -112,7 +109,6 @@ aws logs tail /aws/lambda/jkia-landing-notifier --since 1h
 ```
 
 ### Test Lambda Function
-```bash
 # Manual test
 aws lambda invoke --function-name jkia-landing-notifier response.json
 cat response.json
@@ -128,7 +124,6 @@ aws sns publish \
 ```
 
 ### Check Infrastructure Status
-```bash
 # Verify Lambda function
 aws lambda get-function --function-name jkia-landing-notifier
 
@@ -139,9 +134,8 @@ aws events describe-rule --name jkia-landing-check
 aws sns list-subscriptions-by-topic --topic-arn $(terraform output -raw sns_topic_arn)
 ```
 
-## 📧 Sample Notification
+## Sample Notification
 
-```
 Subject: ✈️ Aircraft Landing Alert - JKIA
 
 🛬 AIRCRAFT LANDING NOTIFICATION
@@ -194,22 +188,19 @@ if on_ground or (altitude and altitude < 200 and velocity and velocity < 100):
 | CloudWatch Logs | Log storage and queries | ~$0.10 |
 | **Total** | | **~$0.80/month** |
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### No Notifications Received
 1. **Check email subscription status**:
-   ```bash
    aws sns list-subscriptions-by-topic --topic-arn $(terraform output -raw sns_topic_arn)
    ```
    Look for `"SubscriptionArn"` - should NOT say `"PendingConfirmation"`
 
 2. **Verify Lambda execution**:
-   ```bash
    aws logs tail /aws/lambda/jkia-landing-notifier --since 30m
-   ```
+   
 
 3. **Test SNS manually**:
-   ```bash
    aws sns publish --topic-arn $(terraform output -raw sns_topic_arn) --message "Test"
    ```
 
@@ -224,39 +215,35 @@ if on_ground or (altitude and altitude < 200 and velocity and velocity < 100):
 - Add cooldown logic to prevent duplicate notifications
 
 ### Lambda Function Errors
-```bash
 # Check for import errors or runtime issues
 aws lambda invoke --function-name jkia-landing-notifier response.json
 cat response.json
 ```
 
-## 🔄 Updates & Maintenance
+## Updates & Maintenance
 
 ### Update Lambda Code
-```bash
 # After modifying lambda/lambda_function.py
 terraform apply -auto-approve
 ```
 
 ### Update Infrastructure
-```bash
 # After modifying Terraform files
 terraform plan
 terraform apply
 ```
 
 ### View Terraform State
-```bash
 terraform show
 terraform output
-```
+
 
 ## 🧹 Cleanup
 
 To remove all resources and stop charges:
-```bash
+
 terraform destroy
-```
+
 
 ## 📁 Project Structure
 
@@ -310,5 +297,3 @@ If you encounter issues or have questions:
 4. Contact the maintainer
 
 ---
-
-**Happy Flight Tracking! ✈️**
